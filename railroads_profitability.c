@@ -3,22 +3,22 @@
 
 #define MAX_SIZE 100
 
-// Selectează păstrarea căii ferate dintre orașele sursă și destinație
+// Select to keep the railroad between the source and destination cities
 void choose_rail(Graph *g, int src, int dest) {
     Railroad rail = g->adj[src];
     while (rail->dest != dest) rail = rail->next;
     rail->keep_rail = 1;
 }
 
-// Procesează datele de intrare pentru o cale ferată cu cost
+// Process the input data for a railroad with cost
 void process_railroad_with_cost(FILE* fin, Graph *g, Queue* q) {
     int cost = 0;
     char src[MAX_SIZE], dest[MAX_SIZE];
     fscanf(fin, "%s%s%d", src, dest, &cost);
 
     /*
-        Verificăm dacă orașele sursă și destinație au fost introduse în graf, în
-        caz contrar sunt adăugate la lista de orașe
+        Check if the source and destination cities are in the graph;
+        otherwise, add them to the list of cities
     */
     if (!listed_city(g, src)) {
         list_new_city(g, src);
@@ -30,10 +30,10 @@ void process_railroad_with_cost(FILE* fin, Graph *g, Queue* q) {
     int src_idx = city_index(g, src);
     int dest_idx = city_index(g, dest);
 
-    // Adăugăm indicii orașelor sursă și destinație în coada de prioritate
+    // Push the indices of source and destination cities into the priority queue
     push(q, src_idx, dest_idx);
 
-    // Construim căile ferate sursă->destinație și destinație->sursă
+    // Construct railroads from source->destination and destination->source
     Railroad src_rail = build_railroad_with_cost(dest_idx, cost);
     Railroad dest_rail = build_railroad_with_cost(src_idx, cost);
 
@@ -45,7 +45,7 @@ void process_railroad_with_cost(FILE* fin, Graph *g, Queue* q) {
     g->adj[dest_idx] = dest_rail;
 }
 
-// Alege maxim k căi ferate pentru o profitabilitate maximă
+// Select a maximum of k railroads for maximum profitability
 void choose_max_k_profitable_rails(Graph *g, char *start_city, int k_max_rails) {
     int *distances = (int *)malloc(g->num_cities * sizeof(int));
     int *visited = (int *)calloc(g->num_cities, sizeof(int));
@@ -54,7 +54,7 @@ void choose_max_k_profitable_rails(Graph *g, char *start_city, int k_max_rails) 
         distances[city] = INT_MAX;
     }
 
-    // Începem căutarea cu orașul origine cu costul 0
+    // Start the search with the source city with 0 cost
     distances[city_index(g, start_city)] = 0;
     visited[city_index(g, start_city)] = 1;
 
@@ -63,8 +63,7 @@ void choose_max_k_profitable_rails(Graph *g, char *start_city, int k_max_rails) 
         int src = 0, dest = 0, cost = INT_MAX;
 
         /*
-            Iterăm prin toate orașele vizitate și căutăm calea ferată către cel
-            mai apropiat oraș de origine care nu este vizitat
+            Iterate through all visited cities and search for the railroad to the closest unvisited city
         */
         for (int city = 0; city < g->num_cities; city++) {
             if (visited[city]) {
@@ -80,11 +79,11 @@ void choose_max_k_profitable_rails(Graph *g, char *start_city, int k_max_rails) 
             }
         }
 
-        // Alegem calea ferată dintre orașele sursă și destinație
+        // Choose the railroad between the source and destination cities
         choose_rail(g, src, dest);
         choose_rail(g, dest, src);
 
-        // Setăm orașul ales ca vizitat și îi salvăm costul minim
+        // Mark the selected city as visited and record its minimum cost
         distances[dest] = cost;
         visited[dest] = 1;
     }
@@ -92,7 +91,7 @@ void choose_max_k_profitable_rails(Graph *g, char *start_city, int k_max_rails) 
     free(visited);
 }
 
-// Afișăm căile ferate care au fost selectate
+// Display the railroads that have been selected
 void show_railroads_to_keep(FILE *fout, Graph *g, Queue *q, int k_max_rails) {
     fprintf(fout, "%d\n", k_max_rails);
 

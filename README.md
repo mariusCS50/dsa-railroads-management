@@ -1,92 +1,100 @@
-# TEMA 3 - SDA
+# DSA Railroads Management
 
-Tema a fost destul de complexă, dar am reușit să o rezolv prin aplicarea principiilor de simplitate a codului, l-am separat pe unde era posibil și se cuvinea mai bine în diferite funcții pentru a fi mai ușor de înțeles. De asemenea am incllus comentarii înainte tuturor funcțiilor și înăuntrul celor mai complicate pentru a facilita citirea codului.
+This project implements a command-line tool in C for managing and analyzing railroad networks. It was developed as a university homework assignment and focuses on two main requirements:
 
-Codul a fost scris în totalitate de mine, fără a folosi bucăți de cod din alte surse. Am verificat și corectat stilul de cod folosind clang-tidy și cpplint.
+- **Task 1:** Simulate railroad wear over several years using wear degrees per railroad section.
+- **Task 2:** Determine the most profitable subset of railroads starting from a given city.
 
-README-ul nu are extensia .md fiincă checkerul nu alocă punctajul pe README în acest caz.
+## Features
 
-## queue.h
+- **Railroad Wear Simulation:**
+  Reads a railroad network with multiple sections per link, computes new wear degrees over successive years, and identifies railroads with average wear below a provided threshold.
+  - Uses [railroads_wear_degree.c](railroads_wear_degree.c) for processing and updating wear values.
 
-În acest header file am definit structurile și funcțiile pentru coada de prioritate a căilor ferate conform datelor de intrare, pentru a putea la final să afișez căile ferate în ordinea lor inițială, precum se cere și în condiție.
+- **Profitability Analysis:**
+  Calculates costs for each railroad (interpreting the number of sections as cost) and selects the most profitable connections using a modified minimum spanning tree approach.
+  - Implemented in [railroads_profitability.c](railroads_profitability.c).
 
-## queue.c
+- **Graph and Queue Structures:**
+  Maintains the network using an adjacency list for cities and railroads.
+  - Graph management is in [railroads_management.c](railroads_management.c) and [railroads.h](railroads.h).
+  - A custom queue for processing railroads is provided in [queue.c](queue.c) and [queue.h](queue.h).
 
-Aici sunt implementate funcțiile clasice pentru o coadă: crearea, inserarea, extragerea, distrugerea.
+- **Automated Testing Support:**
+  Input files (in `input/`), reference outputs (in `ref/`), and output directories (in `output/`) are structured to support automated testing via the provided [run_tests.sh](run_tests.sh) script.
 
-## railroads.h
+## Project Structure
 
-Aici sunt declarate structurile pentru o cale ferată, și graful cu lista de adiacență. De asemenea sunt include funcțiile necesare pentru prelucrarea grafului de căi ferate și construirea căilor ferate, funcțiile necesare pentru executarea cerințelor 1 și 2, dar și funcții de verificarea și inserarea orașelor.
+- **Input Files:**
+  Located in the `input/` directory with subfolders for each task (e.g. `cerinta1/` and `cerinta2/`).
 
-Am inclus comentarii înaintea fiecărui grup de funcții pentru a fi ușor de diferențiat.
+- **Reference Outputs:**
+  Stored in the `ref/` directory, these files are used by the testing script to verify program correctness.
 
-## railroads_management.c
+- **Source Code:**
+  - `tema3.c` – Main program that parses the task parameter and invokes the corresponding requirement function.
+  - `railroads.h` – Declarations for the railroad graph and associated functions.
+  - `railroads_management.c` – Functions for creating and destroying the graph, and city management.
+  - `railroads_wear_degree.c` – Implements wear degree simulation, updating, and output for Cerința 1.
+  - `railroads_profitability.c` – Implements processing of railroad costs and selection of the most profitable subset for Cerința 2.
+  - `queue.c` and `queue.h` – Implementation of a queue used for processing railroads.
 
-Aici sunt declarate funcțiile de prelucrare a grafului:
- - create_railroad_graph(),
- - build_railroad_with_wear(int dest, int cost),
- - build_railroad_with_cost(int dest, int cost),
- - destroy_railroad_graph(Graph *g),
+- **Makefile:**
+  Provides targets to build the project and clean build artifacts.
 
-dar și cele ce țin de verificarea și inserarea orașelor:
- - listed_city(Graph *g, char* city),
- - list_new_city(Graph *g, char* city),
- - city_index(Graph *g, char* city).
+- **Test Script:**
+  [run_tests.sh](run_tests.sh) – Automates execution of both requirements and validates the outputs against reference files.
 
- Toate funcțiile includ comentarii pentru a explica desfășurarea codului.
+## Building the Project
 
-## railroads_wear_degree.c
+The project uses a Makefile to compile the source files. To build the executable, run:
 
-Acest fișier conține funcțiile necesare pentru ralizarea cerinței 1.
+```sh
+make build
+```
 
-Din nou, codul este bogat în comentarii și consider că nu trebuie să explic în amănunte ce face fiecare funcție.
+The command compiles [`queue.c`](queue.c ), [`railroads_management.c`](railroads_management.c ), [`railroads_wear_degree.c`](railroads_wear_degree.c ), [`railroads_profitability.c`](railroads_profitability.c ), and [`tema3.c`](tema3.c ) into the [`tema3`](tema3 ) executable.
 
-O să explic desfășurarea algoritmului pe pași:
-1) procesăm calea ferată curentă cu grade de uzură, o construim, verificând totodată și prezența orașelor din graf, inserându-le dacă e nevoie.
-De asemenea includem indicii căii ferate în coada de prioritate pentru ca la final șă le putem afișa în ordnea de intrare.
-2) După citirea tuturor datelor începe algoritmul propriu-zis, care constă în două părți principale:
-    1) calcularea gradelor noi de uzură după valorile gradelor vechi în new_wear.
-    2) actualizarea gradelor curente de uzură din wear cu cele noi din new_wear.
+## Running the Program
 
-Am optat pentru acest algoritm, fiindcă actualizarea directă a gradelor de uzură duce la cazuri nefavorabile, trebuie verificate dacă ele au fost deja schimbate, dacă da, trebuie prelucrată altfel secțiunea curentă, iar la cazurile cu gradul de uzură 0 este o bătaie mare de cap.
+The built executable accepts a task parameter:
 
-Este mult mai simplu să calculăm gradele noi de uzură într-o altă listă, și apoi să le actulizăm, ceea face algoritmul mult mai simplu și ușor de urmărit.
+- **Task 1:** Railroad wear simulation
+  ```sh
+  ./tema3 1
+  ```
 
-3) Afișăm căile ferate după ordinea din coada de prioritate cu gradele de uzură finale, iar la final afișăm indicii căilor ferate cu media gradelor de uzură mai mică ca limita de uzură.
+- **Task 2:** Railroad profitability selection
+  ```sh
+  ./tema3 2
+  ```
 
-## railroads_profitability.c
+Input should be provided in a file named [`tema3.in`](tema3.in ) and the output will be written to [`tema3.out`](tema3.out ).
 
-Acest fișier conține funcțiile necesare pentru ralizarea cerinței 2.
+## Implementation Details
 
-Din nou, codul este bogat în comentarii și nu voi explica amănunțit fiecare funcție, doar algoritmul.
+- **Graph Representation:**
+  Cities are stored as a dynamic array of strings, and railroads are maintained as linked lists in an adjacency list.
+  See [`railroads_management.c`](railroads_management.c ) and [`railroads.h`](railroads.h ).
 
-Algoritmul este o combinație a algoritmului lui Prim și Dijkstra, modificarea constă în faptul că nu căutăm calea ferată de cost minim, ci calea ferată către orașul cel mai apropiat de orașul origine.
+- **Wear Degree Updates:**
+  For each railroad, new wear degrees are calculated based on the current degree, and then updated with a cap of 100.
+  More details in [`railroads_wear_degree.c`](railroads_wear_degree.c ).
 
-Procesarea datelor și afișarea sunt aproximativ lafel, doar că modificate pentru cerința 2, adică citim căi ferate cu cost în loc de grade de uzură, iar la final afișăm doar căile ferate alese.
+- **Profitability Analysis:**
+  Uses a greedy approach similar to Prim's algorithm to choose a fixed number of railroads for maximum profitability starting from a given city.
+  Check [`railroads_profitability.c`](railroads_profitability.c ).
 
-Pașii algoritmului efectiv sunt:
-1) Inițializăm doi vectori, unul pentru salvarea orașelor vizitate și celălalt pentru distanța minimă.
-2) Includem orașul de start ca vizitat cu distanța 0.
-3) Iterăm prin toate orașele vizitate și căutăm calea ferată către cel mai apropiat oraș de origine care nu este vizitat, deoarece trebuie să maximizăm numărul de orașe la care nu se modifică drumul minim, dar și cele care sunt mai apropiate de origine.
-4) După găsirea căii ferate, setăm calea ferată ca aleasă și includem orașul destinație ca vizitat cu distanța minimă de la origine până la acesta.
-5) Repetăm pașii 1 - 4 pentru a alege cele k maxime căi ferate cu profitabilitate maximă.
+- **Queue Operations:**
+  A simple linked-list based queue implementation is provided for managing processing order.
+  Refer to [`queue.c`](queue.c ) and [`queue.h`](queue.h ).
 
-Acum, de ce funcționează algoritmul?
+## Testing
 
-La început avea două funcții care realizau separat partea cu Dijkstra și cea cu Prim modificat, însă după mi-am dat seama că nu am nevoie de drumurile minime către toate orașele, doar către cele alese și vizitate, așa că am inclus partea Dijkstra într-o singură funcție.
+The provided [`run_tests.sh`](run_tests.sh ) script copies input files, runs the executable, and diffs [`tema3.out`](tema3.out ) with reference outputs. To run tests, simply execute:
 
-Începând de la orașul origine, includem un oraș nou unul câte unul, actualizându-i distanța minimă.
+```sh
+./run_tests.sh
+```
 
-De exemplu pentru primul test, Algoritmul începe de la Malmo cu distanța 0 și alege orașele în felul următor:
-1) Copenhaga cu drumul minim 1, calea ferată Malmo - Copenhaga
-2) Oslo cu drumul minim 2, calea ferată Copenhaga - Oslo
-3) Stockhold cu drumul minim 3, calea ferată Malmo - Stockhold
-4) Bergen cu drumul minim 6, calea ferată Copenhaga - Bergen
-
-Dat fiind că căutăm nu calea ferată de cost minim, ci calea cu costul cem mai mic de la origine, în cazul testelor cu număr maxim egal de orașe, se vor alege cele mai apropiate.
-
-## tema3.c
-
-Acesta este programul main, care citește numărul cerinței din argvă1î și execută respectiv cerința 1 sau 2.
-
-Aici am pus comentarii la aproape fiecare pas pentru fiecare cerință, de aceea nu mai explic ce face fiecare funcție, mai ales că ele sunt bazate pe funcțiile explicate anterior.
+This script also invokes Valgrind to check for memory leaks.

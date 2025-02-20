@@ -5,7 +5,7 @@
 #define max(a, b) a > b ? a : b
 #define min(a, b) a < b ? a : b
 
-// Citește gradele de uzură pentru calea ferată în ambele sensuri
+// Read the wear degrees for the railroad in both directions
 void read_sections_wear(FILE* fin, Railroad src_rail, Railroad dest_rail) {
     int num_sections = src_rail->num_sections;
     for (int i = 0; i < num_sections; i++) {
@@ -14,7 +14,7 @@ void read_sections_wear(FILE* fin, Railroad src_rail, Railroad dest_rail) {
     }
 }
 
-// Caută gradul maxim de uzură din secțiunile vecine ale unui oraș
+// Find the maximum wear degree among neighboring sections of a city
 void vicinity_highest_wear(Railroad city_rail, float *max_wear) {
     while (city_rail != NULL) {
         *max_wear = max(*max_wear, city_rail->wear[0]);
@@ -22,35 +22,35 @@ void vicinity_highest_wear(Railroad city_rail, float *max_wear) {
     }
 }
 
-// Găsește gradul maxim de uzură de lângă o secțiune
+// Find the maximum wear degree next to a section
 void find_highest_wear_degree(Graph *g, int src, Railroad rail, int section_id, float *max_wear) {
     if (rail->num_sections == 1) {
-        // Secțiunea este între două orașe care trebuie verificate
+        // The section is between two cities that need to be checked
         vicinity_highest_wear(g->adj[src], max_wear);
         vicinity_highest_wear(g->adj[rail->dest], max_wear);
     } else if (section_id == 0) {
-        // Secțiunea este între orasul sursă și o altă secțiune
+        // The section is between the source city and another section
         *max_wear = rail->wear[section_id + 1];
         vicinity_highest_wear(g->adj[src], max_wear);
     } else if (section_id == rail->num_sections - 1) {
-        // Secțiunea este între orasul destinație și o altă secțiune
+        // The section is between the destination city and another section
         *max_wear = rail->wear[section_id - 1];
         vicinity_highest_wear(g->adj[rail->dest], max_wear);
     } else {
-        // Secțiunea este între alte două secțiuni
+        // The section is between two other sections
         *max_wear = max(rail->wear[section_id - 1], rail->wear[section_id + 1]);
     }
 }
 
-// Procesează datele de intrare pentru o cale ferată cu grade de uzură
+// Process input data for a railroad with wear degrees
 void process_railroad_with_wear(FILE* fin, Graph *g, Queue* q) {
     int num_sections = 0;
     char src[MAX_SIZE], dest[MAX_SIZE];
     fscanf(fin, "%s%s%d", src, dest, &num_sections);
 
     /*
-        Verificăm dacă orașele sursă și destinație au fost introduse în graf, în
-        caz contrar sunt adăugate la lista de orașe
+        Check if the source and destination cities are in the graph;
+        if not, add them to the list of cities
     */
     if (!listed_city(g, src)) {
         list_new_city(g, src);
@@ -62,16 +62,16 @@ void process_railroad_with_wear(FILE* fin, Graph *g, Queue* q) {
     int src_idx = city_index(g, src);
     int dest_idx = city_index(g, dest);
 
-    // Adăugăm indicii orașelor sursă și destinație în coada de prioritate
+    // Add the indices of source and destination cities to the priority queue
     push(q, src_idx, dest_idx);
 
-    // Construim căile ferate sursă->destinație și destinație->sursă
+    // Construct railroads from source->destination and destination->source
     Railroad src_rail = build_railroad_with_wear(dest_idx, num_sections);
     Railroad dest_rail = build_railroad_with_wear(src_idx, num_sections);
 
     read_sections_wear(fin, src_rail, dest_rail);
 
-    // Inserăm noile căi ferate în listele de adiacență respective fiecăreia
+    // Insert the new railroads into the respective adjacency lists
     src_rail->next = g->adj[src_idx];
     g->adj[src_idx] = src_rail;
 
@@ -79,14 +79,14 @@ void process_railroad_with_wear(FILE* fin, Graph *g, Queue* q) {
     g->adj[dest_idx] = dest_rail;
 }
 
-// Calculează gradele noi de uzură pe baza gradelor curente
+// Calculate the new wear degrees based on the current wear degrees
 void compute_new_wear_degrees(Graph *g) {
     for (int city_id = 0; city_id < g->num_cities; city_id++) {
         Railroad rail = g->adj[city_id];
         while (rail != NULL) {
             for (int i = 0; i < rail->num_sections; i++) {
                 rail->new_wear[i] = 2 * rail->wear[i];
-                // Dacă gradul de uzură curent este 0, căutăm gradul maxim vecin
+                // If the current wear degree is 0, search for the maximum neighboring degree
                 if (rail->new_wear[i] == 0) {
                     find_highest_wear_degree(g, city_id, rail, i, &(rail->new_wear[i]));
                     rail->new_wear[i] = rail->new_wear[i] / 2;
@@ -97,7 +97,7 @@ void compute_new_wear_degrees(Graph *g) {
     }
 }
 
-// Actualizează gradele curente de uzură cu cele noi calculate
+// Update the current wear degrees with the newly calculated ones
 void update_wear_degrees(Graph *g) {
     for (int city_id = 0; city_id < g->num_cities; city_id++) {
         Railroad rail = g->adj[city_id];
@@ -111,8 +111,8 @@ void update_wear_degrees(Graph *g) {
 }
 
 /*
-    Afișează după prioritate căile ferate și gradele lor curente de uzură,
-    împreună cu indicii căilor care pot fi păstrate
+    Display the railroads per priority and their current wear degrees,
+    along with indices of railroads that can be retained
 */
 void railroads_wear_status(FILE* fout, Graph *g, Queue *q, float threshold) {
     int *rails_to_keep = NULL, num_rtk = 0, railroad_idx = 0;
@@ -126,13 +126,13 @@ void railroads_wear_status(FILE* fout, Graph *g, Queue *q, float threshold) {
         while (rail->dest != dest) rail = rail->next;
 
         fprintf(fout, "%s %s %d ", g->cities[src], g->cities[dest], rail->num_sections);
-        // Afișăm gradele de uzură și le adăugăm la medie
+        // Print the wear degrees and compute the average
         float avg_wear = 0;
         for (int i = 0; i < rail->num_sections; i++) {
             fprintf(fout, "%.2f ", rail->wear[i]);
             avg_wear += rail->wear[i] / (float)rail->num_sections;
         }
-        // Dacă media este mai mică decât limita de uzură, salvăm indicele căii
+        // If the average is less than the wear threshold, save the index of the railroad
         if (avg_wear < threshold) {
             rails_to_keep = realloc(rails_to_keep, ++num_rtk * sizeof(int));
             rails_to_keep[num_rtk - 1] = railroad_idx;
@@ -141,7 +141,7 @@ void railroads_wear_status(FILE* fout, Graph *g, Queue *q, float threshold) {
         pop(q);
     }
 
-    // Afișăm indicii căilor care pot fi păstrate
+    // Print the indices of the railroads that can be retained
     for (int rail_idx = 0; rail_idx < num_rtk; rail_idx++) {
         fprintf(fout, "%d ", rails_to_keep[rail_idx]);
     }

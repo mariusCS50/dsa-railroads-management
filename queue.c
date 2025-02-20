@@ -1,14 +1,14 @@
 /* GAIBU Marius - 315CB */
 #include "queue.h"
 
-// Crează coada de prioritate
+// Create the priority queue
 Queue* create_queue() {
     Queue *q = (Queue *)malloc(sizeof(Queue));
     q->head = q->tail = NULL;
     return q;
 }
 
-// Adaugă indicii unei căi ferate noi la sfârșitul cozii
+// Add indices for a new railway at the end of the queue
 void push(Queue *q, int src, int dest) {
     TList aux = (TList)malloc(sizeof(Cell));
     aux->src = src;
@@ -23,7 +23,7 @@ void push(Queue *q, int src, int dest) {
     }
 }
 
-// Elimină indicii căii ferate din vârful cozii
+// Remove indices from the front of the queue
 void pop(Queue *q) {
     TList aux = q->head;
 
@@ -35,7 +35,7 @@ void pop(Queue *q) {
     free(aux);
 }
 
-// Distruge coada de prioritate
+// Destroy the priority queue
 void destroy_queue(Queue *q) {
     free(q);
 }
